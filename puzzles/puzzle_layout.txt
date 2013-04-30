@@ -1,0 +1,16 @@
+First line: 
+    Size of the board, should be an integer
+
+Proceeding lines:
+    One line for every constraint of the form:
+        FUNC RESULT (x0, y0) (x1, y1) ..... (xn, yn)
+    Where: 
+        FUNC is in {add, sub, mul, div, con}
+        RESULT is the desired result of performing FUNC on the coordinates listed
+        (xn, yn)... is a list of non-diagonal adjacent coordinates involved in the constraint.
+
+For further clarification, see the format of the provided KenKen layout files in this directory
+
+
+NOTE: The UPPER-LEFT corner of a KenKen puzzle is location (0, 0), and the LOWER-RIGHT corner is (n-1, n-1)
+
