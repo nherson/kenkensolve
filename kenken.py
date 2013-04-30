@@ -1,3 +1,16 @@
+#############################################################
+# A basic KenKen Puzzle solver (v1.0)                       #
+# Used Constraint Satisfaction Problem properties           #
+# using N-ary constraints to solve KenKen puzzles           #
+#                                                           #
+# Great for checking answers, or maybe just for after       #
+# you've given up :)                                        #
+#                                                           #
+#                                                           #
+# Author: Nicholas Herson (nicholas.herson@berkeley.edu)    #
+#                                                           #
+#############################################################
+
 import sys
 import coordinate
 import constraint
@@ -220,7 +233,8 @@ def main(kenkenFileName):
     except ValueError:
         raise ValueError("line: " + kenkenLines[0] + "...Error: first line must be a single int for size")
 
-    #Make the board
+    #Initialize the board
+    #This will go ahead and also create the Coordinate objects and place them inside the board
     kenkenBoard = Board(boardSize)
     
     #Generate the RCConstraints (RC = Row and Column)
@@ -229,7 +243,8 @@ def main(kenkenFileName):
         for coord in rowColumnConstraint.getCoordinates():
             coord.addConstraint(rowColumnConstraint)
     
-    #Parse the ArithmeticConstraints and add them to the board    
+    #Parse the ArithmeticConstraints and add them to the board
+    #See puzzles/puzzle_example.kk for how KenKen layout files should look
     for line in kenkenLines[1:]:
         simplifiedConstraint = parseConstraint(line)
         arithmeticConstraint = generateArithmeticConstraint(kenkenBoard, simplifiedConstraint)
@@ -242,10 +257,15 @@ def main(kenkenFileName):
     # The Coordinates have been established, and both the Row/Column and Arithmetic
     # constraints have been created and added to the kenkenBoard
     # Now it's time to solve the damn thing.
+    # 
+    # For now, only a naive arcConsistency method is implemented.
+    # Future revisions can add some command line arg checking to determine which
+    # method to use to solve the board.
     #######
 
     arcConsistency(kenkenBoard)
 
+#Get the ball rolling with the main() function
 if __name__ == "__main__":
     main(sys.argv[1])
 

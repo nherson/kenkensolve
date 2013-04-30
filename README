@@ -1,1 +1,25 @@
-A developing KenKen solving program, written in Python.
+A program for solving KenKen boards, popular puzzles involving numbers
+and arithmetic (think Sudoku, but less tedious).
+
+For examples of KenKen puzzles, visit www.kenken.com
+
+This program was written by Nicholas Herson.  Feel free to modify and develop it
+as you see fit, or maybe suggest an improvement by e-mailing (nicholas.herson@berkeley.edu).
+
+--------------------------------------------------------------------------------------------
+Compatability:
+    This code was developed on a Linux machine, but should work just fine across all 
+    major operating systems with no issues.
+
+
+
+USAGE:
+    Open up a terminal, navigate to the KenKen solver's root, and use the following command:
+        python kenken.py KENKEN_FILENAME.kk
+
+    Puzzle layout files are best kept in the "puzzles" subdirectory, so the command should look more like:
+        python kenken.py puzzles/KENKEN_FILENAME.kk
+    
+    (NOTE: it might be a backslash for Windows users)
+
+

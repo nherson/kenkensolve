@@ -2,11 +2,35 @@ import itertools
 import coordinate
 
 def arcConsistency(board):
+    """
+    Takes in a board, and runs the arcConsistency technique to find a solution to the KenKen,
+    if one exists.
+    Steps:
+    1. Throw every (Coordinate, Constraint) pair onto the consistencyQueue and check consistency
+        for all values in the coordinate's domain
+            - Eliminate values as necessary
+    2. If a variable is pruned, take all Coordinates linked to the current Coordinate via a constraint,
+        and put them into the queue (if they aren't already
+    3. When the queue is empty:
+        - Make sure all Coordinates still have domains of size >= 1
+            - If not, backtrack (by throwing a NoSolution exception)
+        - If all domains are size 1, we have a solution --> YAY!
+        - If some domains are bigger than 1:
+            - Find the smallest domain of size 2 or greater, and assign a value
+                - Recurse and continue arcConsistency
+    """
+    #Just get a local copy of the coordinates, for convenience
     coordinates = []
     for i in range(board.getSize()):
         for coord in board.getRow(i):
             coordinates.append(coord)
     def arcConsistencyHelper(board):
+        """
+        The helper function is recurses every time the queue is emptied,
+        and a coordinate must be assigned a value.  When the helper function
+        finds a solution, it throws a "Solution" exception, which immediately exits all
+        recursion and is caught outside the helper function (neat!).
+        """
         consistencyQueue = []
         for coord in coordinates:
             for constraint in coord.getConstraints():
@@ -17,9 +41,12 @@ def arcConsistency(board):
             currentCoordinate, currentConstraint = consistencyQueue.pop(0)
             relatedCoordinates = [coord for coord in currentConstraint.getCoordinates() if coord != currentCoordinate]
             for value in currentCoordinate.getDomain():
+                #Find a set of Coordinate assignments that satisfies the Constraint for this value
                 for instance in itertools.product(*[coord.getDomain() for coord in relatedCoordinates]):
                     if currentConstraint.valuesSatisfyConstraint((value,) + instance):
                         break
+                #Nothing satisfies? Then prune the value from the domain, and add associated
+                #(Coordinate, Constraint) pairs onto the queue
                 else:
                     currentCoordinate.removeFromDomain(value)
                     for const in currentCoordinate.getConstraints():
@@ -27,19 +54,21 @@ def arcConsistency(board):
                             if (coord, const) not in consistencyQueue:
                                 consistencyQueue.append((coord, const))
 
-        #is there an empty domain?
+        #Is there an empty domain?
         for coord in coordinates:
             if (len(coord.getDomain()) == 0):
                 raise NoSolution("no solution found")
 
-        #have we found a solution?
+        #Have we found a solution?
         for coord in coordinates:
             if (len(coord.getDomain()) != 1):
                 break
         else:
             raise Solution()        
 
-        #none of the above? lets assign a variable and recurse
+        #None of the above? lets assign a variable and recurse.
+        #But first, let's save our current state, so we can 
+        #backtrack to it if needed.
         savedDomains = [] #same order as "coordinates" variable
         for coord in coordinates:
             savedDomains.append(coordinate.deepcopy(coord.getDomain()))
@@ -55,23 +84,14 @@ def arcConsistency(board):
             except NoSolution:
                 for i in range(len(savedDomains)):              #Restore the domains if the assignment fails
                     coordinates[i].setDomain(savedDomains[i])
+
+        #Getting to this point means every value in a coordinate's domain has been assigned
+        #and nothing allows for satisfaction of constraints down the road.  This means we are left
+        #with no other options; there is no solution.
         raise NoSolution()
-        #IF YOU GET PAST THIS FOR LOOP, IT MEANS NO ASSIGNMENTS TO A VARIABLE YIELDED A SOLUTION. GAME OVER, NO SOLUTION
-                
-        """
-            if (len(coord.getDomain()) > 1):
-                savedDomains = []
-                #Find variable with smallest non-1 sized domain
-                smallestDomainCoord = 
-                smallestDomainCoord.
-                for smallDomainCoord in coordinates:
-                    if len(smallDomainCoord.getDomain()) != 1 
-                            and len(smallDomainCoord.getDomain()) > len(smallestDomainCoord.getDomain()):
-                        smallDomainCoord = smallDomainCoord
-                for saveCoordinate in coordinates:
-                    savedDomains.append(coordinate.deepcopy(saveCoordiante.getDomain()))
-                for 
-    """
+
+        
+    #Attempt the helper method, and if a Solution is found, it'll be caught.        
     try:
         arcConsistencyHelper(board)
     except Solution:
@@ -83,11 +103,13 @@ def arcConsistency(board):
                 print("(" + str(board.getCoordinate(i, j).getX()) + "," + 
                     str(board.getCoordinate(i, j).getY()) + "): " + str(board.getCoordinate(i, j).getDomain()[0]))
             print("") 
+    #In the event that no solution exists
     except NoSolution:
-        print("no solution found")
+        print("No solution found. Is the KenKen file properly configured?")
 
 
-
+#Extensions of generic exceptions, used to take advantage
+#of exception throwing to navigate around the code efficiently
 class Solution(Exception):
     def dummy():
         return #does nothing

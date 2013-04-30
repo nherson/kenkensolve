@@ -1,0 +1,30 @@
+Features and Things to add or work on:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PARSING:
+- Better separate the main() function and parsing procedures
+- More thorough sanity checking and error handling for parsing prodedures
+- Allow for comments in KenKen layout files
+- Come up with an smarter way to layout KenKen files (they take FOREVER to type in)
+
+SOLVING:
+- Make arcConsistency run faster
+    - I don't think every single (Coordinate, Constraint) pair needs to be 
+        re-evaluated every time a coordinate assignment is made and the
+        helper funciton recurses.  Put this code outside the "helper" function
+        so it runs only once.
+    - Least Constraining Variable?
+- Add more solving methods
+    - Backtracking only
+    - The one where you assign everything at the start, and systematically fix it
+
+OBJECT MANAGEMENT:
+- Give Board its own .py file, just like Coordinate and Constraints
+- Create custom Exceptions to throw for parsing, don't just use
+    built-in ones inappropriately
+
+INTERFACE:
+- Create a front-end 
+- Display results in an ASCII-generated board via the terminal
+
+MISC
+- Functionality to generate a random KenKen board
