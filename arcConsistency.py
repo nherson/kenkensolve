@@ -27,6 +27,16 @@ def arcConsistencyBacktracking(board):
     for i in range(board.getSize()):
         for coord in board.getRow(i):
             coordinates.append(coord)
+
+    #Initialize the Queue
+    consistencyQueue = []
+
+    #Add all (Coordiante, Constraint) pairs to the queue to start
+    for coord in coordinates:
+            for constraint in coord.getConstraints():
+                if (coord, constraint) not in consistencyQueue:
+                    consistencyQueue.append((coord, constraint))
+ 
     def arcConsistencyHelper(board):
         """
         The helper function is recurses every time the queue is emptied,
@@ -34,11 +44,6 @@ def arcConsistencyBacktracking(board):
         finds a solution, it throws a "Solution" exception, which immediately exits all
         recursion and is caught outside the helper function (neat!).
         """
-        consistencyQueue = []
-        for coord in coordinates:
-            for constraint in coord.getConstraints():
-                if (coord, constraint) not in consistencyQueue:
-                    consistencyQueue.append((coord, constraint))
         while (len(consistencyQueue) != 0):
             #Keep looping until all constraints are satisfied, and no more pruning is available
             currentCoordinate, currentConstraint = consistencyQueue.pop(0)
@@ -52,11 +57,8 @@ def arcConsistencyBacktracking(board):
                 #(Coordinate, Constraint) pairs onto the queue
                 else:
                     currentCoordinate.removeFromDomain(value)
-                    for const in currentCoordinate.getConstraints():
-                        for coord in const.getCoordinates():
-                            if (coord, const) not in consistencyQueue:
-                                consistencyQueue.append((coord, const))
-
+                    addRelatedToQueue(currentCoordinate)
+    
         #Is there an empty domain?
         for coord in coordinates:
             if (len(coord.getDomain()) == 0):
@@ -83,6 +85,7 @@ def arcConsistencyBacktracking(board):
         for x in savedDomains[smallestDomainIndex]:
             coordinates[smallestDomainIndex].setDomain([x,])
             try:
+                addRelatedToQueue(coordinates[smallestDomainIndex])
                 arcConsistencyHelper(board)
             except NoSolution:
                 for i in range(len(savedDomains)):              #Restore the domains if the assignment fails
@@ -93,7 +96,13 @@ def arcConsistencyBacktracking(board):
         #with no other options; there is no solution.
         raise NoSolution()
 
-        
+    def addRelatedToQueue(coordinate):
+        for constraint in coordinate.getConstraints():
+            for coord in constraint.getCoordinates():
+                if (coord, constraint) not in consistencyQueue:
+                    consistencyQueue.append((coord, constraint))
+
+  
     #Attempt the helper method, and if a Solution is found, it'll be caught.        
     try:
         arcConsistencyHelper(board)
