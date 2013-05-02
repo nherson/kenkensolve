@@ -15,7 +15,7 @@ import sys
 import coordinate
 import constraint
 import os
-from arcConsistency import arcConsistency
+from arcConsistency import arcConsistencyBacktracking
 
 
 def parseConstraint(line):
@@ -263,7 +263,7 @@ def main(kenkenFileName):
     # method to use to solve the board.
     #######
 
-    solved = arcConsistency(kenkenBoard)
+    solved = arcConsistencyBacktracking(kenkenBoard)
     if (solved == True):
         print("Solution Found:")
         for i in range(kenkenBoard.getSize()):
