@@ -263,7 +263,20 @@ def main(kenkenFileName):
     # method to use to solve the board.
     #######
 
-    arcConsistency(kenkenBoard)
+    solved = arcConsistency(kenkenBoard)
+    if (solved == True):
+        print("Solution Found:")
+        for i in range(kenkenBoard.getSize()):
+            print("Column " + str(i))
+            print("##########")
+            for j in range(kenkenBoard.getSize()):
+                print("(" + str(kenkenBoard.getCoordinate(i, j).getX()) + "," +
+                    str(kenkenBoard.getCoordinate(i,j).getY()) + "): " +
+                     str(kenkenBoard.getCoordinate(i,j).getDomain()[0]))
+            print("")
+    else:
+        print("No solution was found. Perhaps the KenKen file is misconfigured?")
+
 
 #Get the ball rolling with the main() function
 if __name__ == "__main__":

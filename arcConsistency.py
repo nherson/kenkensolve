@@ -1,7 +1,7 @@
 import itertools
 import coordinate
 
-def arcConsistency(board):
+def arcConsistencyBacktracking(board):
     """
     Takes in a board, and runs the arcConsistency technique to find a solution to the KenKen,
     if one exists.
@@ -18,6 +18,9 @@ def arcConsistency(board):
         - If some domains are bigger than 1:
             - Find the smallest domain of size 2 or greater, and assign a value
                 - Recurse and continue arcConsistency
+    Returns True IFF a solution is found
+        board will be modified, and the calling function [main()] will be able to analyze the 
+        contents of the board to find the solution that was found
     """
     #Just get a local copy of the coordinates, for convenience
     coordinates = []
@@ -95,18 +98,10 @@ def arcConsistency(board):
     try:
         arcConsistencyHelper(board)
     except Solution:
-        print("SOLUTION FOUND:")
-        for i in range(board.getSize()):
-            print("Column " + str(i))
-            print("#########")
-            for j in range(board.getSize()):
-                print("(" + str(board.getCoordinate(i, j).getX()) + "," + 
-                    str(board.getCoordinate(i, j).getY()) + "): " + str(board.getCoordinate(i, j).getDomain()[0]))
-            print("") 
+        return True
     #In the event that no solution exists
     except NoSolution:
-        print("No solution found. Is the KenKen file properly configured?")
-
+        return False
 
 #Extensions of generic exceptions, used to take advantage
 #of exception throwing to navigate around the code efficiently
