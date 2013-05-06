@@ -268,11 +268,11 @@ def main(kenkenFileName, method):
 
     if (method == None or method == "arcCon"):
         solver = arcConsistency(kenkenBoard)
-        solveIt = solver.solveWithBackTracking
+        solveIt = solver.solve
     elif (method == "arcConLCV"):
         solver = arcConsistency(kenkenBoard)
-        solveIt = solver.solveWithBackTrackingLCV
-    elif (method == "backtrack"):
+        solveIt = solver.solveWithLCV
+    elif (method == "backTrack"):
         solver = BackTrack(kenkenBoard)
         solveIt = solver.solve
     else:
@@ -287,7 +287,7 @@ def main(kenkenFileName, method):
             for j in range(kenkenBoard.getSize()):
                 print("(" + str(kenkenBoard.getCoordinate(i, j).getX()) + "," +
                     str(kenkenBoard.getCoordinate(i,j).getY()) + "): " +
-                     str(kenkenBoard.getCoordinate(i,j).getDomain()[0]))
+                     str(kenkenBoard.getCoordinate(i,j).getValue()))
             print("")
     else:
         print("No solution was found. Perhaps the KenKen file is misconfigured?")

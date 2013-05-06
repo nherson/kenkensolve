@@ -51,7 +51,7 @@ class arcConsistency():
             #have been modified.
 
 
-    def solveWithBackTracking(self):
+    def solve(self):
         """
         Searches for a solution using a combination of arcConsistency
         and backtracking. The Algorithm will run arcConsistency,
@@ -61,22 +61,25 @@ class arcConsistency():
         """
         self.arcConsistencyHelper()
         if self.isSolved():
+            for coordinate in self.board.getCoordinates():
+                coordinate.setValue(coordinate.getDomain()[0])
             return True
-        elif self.deadEnd():
+        elif self.isDeadEnd():
             return False
         else:
+            print("selecting a variable to assign")
             savedDomains = self.backupDomains(self.getListOfDomains())
             smallest = self.indexOfSmallestDomain(savedDomains)
             for x in savedDomains[smallest]:
                 self.addRelatedToQueue(self.coordinates[smallest])
                 self.coordinates[smallest].setDomain([x,])
-                if (self.solveWithBackTracking()):
+                if (self.solve()):
                     return True
                 self.restoreDomains(self.backupDomains(savedDomains))
             else:
                 return False 
 
-    def solveWithBackTrackingLCV(self):
+    def solveWithLCV(self):
         """
         Works the same as solveWithBackTracking, but assigns the variable
         in an order such that you assign the least constraining value first.  
@@ -85,8 +88,10 @@ class arcConsistency():
         """
         self.arcConsistencyHelper()
         if self.isSolved():
+            for coordinate in self.board.getCoordinates():
+                coordinate.setValue(coordinate.getDomain()[0])
             return True
-        elif self.deadEnd():
+        elif self.isDeadEnd():
             return False
         else:
             savedDomains = self.backupDomains(self.getListOfDomains())
@@ -112,7 +117,7 @@ class arcConsistency():
                 currentAssignment, currentDomains = resultingDomainsList[currentAssignmentIndex]
                 self.restoreDomains(currentDomains)
                 self.coordinates[smallest].setDomain([currentAssignment,])
-                if (self.solveWithBackTrackingLCV()):
+                if (self.solveWithLCV()):
                     return True
             else:
                 return False
@@ -152,7 +157,7 @@ class arcConsistency():
                 return False
         return True
 
-    def deadEnd(self):
+    def isDeadEnd(self):
         for domain in self.getListOfDomains():
             if (len(domain) == 0):
                 return True
