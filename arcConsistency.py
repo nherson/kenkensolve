@@ -1,52 +1,41 @@
 import itertools
 import coordinate
+from constraint import RCConstraint, ArithmeticConstraint
 
-def arcConsistencyBacktracking(board):
+class arcConsistency():
     """
-    Takes in a board, and runs the arcConsistency technique to find a solution to the KenKen,
-    if one exists.
-    Steps:
-    1. Throw every (Coordinate, Constraint) pair onto the consistencyQueue and check consistency
-        for all values in the coordinate's domain
-            - Eliminate values as necessary
-    2. If a variable is pruned, take all Coordinates linked to the current Coordinate via a constraint,
-        and put them into the queue (if they aren't already
-    3. When the queue is empty:
-        - Make sure all Coordinates still have domains of size >= 1
-            - If not, backtrack (by throwing a NoSolution exception)
-        - If all domains are size 1, we have a solution --> YAY!
-        - If some domains are bigger than 1:
-            - Find the smallest domain of size 2 or greater, and assign a value
-                - Recurse and continue arcConsistency
-    Returns True IFF a solution is found
-        board will be modified, and the calling function [main()] will be able to analyze the 
-        contents of the board to find the solution that was found
+    Object to wrap around arcConsistency kenken solving interface.
+    Contains methods and procedures needed to solve KenKens via
+    arConsistency as a primary means of pruning domains
     """
-    #Just get a local copy of the coordinates, for convenience
-    coordinates = []
-    for i in range(board.getSize()):
-        for coord in board.getRow(i):
-            coordinates.append(coord)
+    def __init__(self, board):
+        #Just get a local copy of the coordinates, for convenience
+        self.board = board
+        self.coordinates = []
+        for i in range(board.getSize()):
+            for coord in board.getRow(i):
+                self.coordinates.append(coord)
+        #Initialize the Queue
+        self.initializeConsistencyQueue()
 
-    #Initialize the Queue
-    consistencyQueue = []
-
-    #Add all (Coordiante, Constraint) pairs to the queue to start
-    for coord in coordinates:
+    def initializeConsistencyQueue(self):
+        #Add all (Coordiante, Constraint) pairs to the queue to start
+        self.consistencyQueue = []
+        for coord in self.coordinates:
             for constraint in coord.getConstraints():
-                if (coord, constraint) not in consistencyQueue:
-                    consistencyQueue.append((coord, constraint))
+                if (coord, constraint) not in self.consistencyQueue:
+                    self.consistencyQueue.append((coord, constraint))
  
-    def arcConsistencyHelper(board):
+    def arcConsistencyHelper(self):
         """
         The helper function is recurses every time the queue is emptied,
         and a coordinate must be assigned a value.  When the helper function
         finds a solution, it throws a "Solution" exception, which immediately exits all
         recursion and is caught outside the helper function (neat!).
         """
-        while (len(consistencyQueue) != 0):
+        while (len(self.consistencyQueue) != 0):
             #Keep looping until all constraints are satisfied, and no more pruning is available
-            currentCoordinate, currentConstraint = consistencyQueue.pop(0)
+            currentCoordinate, currentConstraint = self.consistencyQueue.pop(0)
             relatedCoordinates = [coord for coord in currentConstraint.getCoordinates() if coord != currentCoordinate]
             for value in currentCoordinate.getDomain():
                 #Find a set of Coordinate assignments that satisfies the Constraint for this value
@@ -57,60 +46,124 @@ def arcConsistencyBacktracking(board):
                 #(Coordinate, Constraint) pairs onto the queue
                 else:
                     currentCoordinate.removeFromDomain(value)
-                    addRelatedToQueue(currentCoordinate)
-    
-        #Is there an empty domain?
-        for coord in coordinates:
-            if (len(coord.getDomain()) == 0):
-                raise NoSolution("no solution found")
+                    self.addRelatedToQueue(currentCoordinate)
+            #When arcConsistencyHelper terminates, it returns and the board's coordinates and their domains 
+            #have been modified.
 
-        #Have we found a solution?
-        for coord in coordinates:
-            if (len(coord.getDomain()) != 1):
-                break
+
+    def solveWithBackTracking(self):
+        """
+        Searches for a solution using a combination of arcConsistency
+        and backtracking. The Algorithm will run arcConsistency,
+        find the smallest remaining domain (that's greater than 1), and
+        systematically assign a value to the variable and recurse onwards.
+        Returns True is a solution is found, False otherwise.
+        """
+        self.arcConsistencyHelper()
+        if self.isSolved():
+            return True
+        elif self.deadEnd():
+            return False
         else:
-            raise Solution()        
+            savedDomains = self.backupDomains(self.getListOfDomains())
+            smallest = self.indexOfSmallestDomain(savedDomains)
+            for x in savedDomains[smallest]:
+                self.addRelatedToQueue(self.coordinates[smallest])
+                self.coordinates[smallest].setDomain([x,])
+                if (self.solveWithBackTracking()):
+                    return True
+                self.restoreDomains(self.backupDomains(savedDomains))
+            else:
+                return False 
 
-        #None of the above? lets assign a variable and recurse.
-        #But first, let's save our current state, so we can 
-        #backtrack to it if needed.
-        savedDomains = [] #same order as "coordinates" variable
-        for coord in coordinates:
-            savedDomains.append(coordinate.deepcopy(coord.getDomain()))
-        smallestDomainIndex = None
-        for i in range(len(savedDomains)):
-            if ((smallestDomainIndex == None or len(savedDomains[i]) < len(savedDomains[smallestDomainIndex]))
-                                            and (len(savedDomains[i]) > 1)):
-                smallestDomainIndex = i
-        for x in savedDomains[smallestDomainIndex]:
-            coordinates[smallestDomainIndex].setDomain([x,])
-            try:
-                addRelatedToQueue(coordinates[smallestDomainIndex])
-                arcConsistencyHelper(board)
-            except NoSolution:
-                for i in range(len(savedDomains)):              #Restore the domains if the assignment fails
-                    coordinates[i].setDomain(savedDomains[i])
+    def solveWithBackTrackingLCV(self):
+        """
+        Works the same as solveWithBackTracking, but assigns the variable
+        in an order such that you assign the least constraining value first.  
+        That is, assign the value which would cause the least domain pruning 
+        after running arcConsistency.
+        """
+        self.arcConsistencyHelper()
+        if self.isSolved():
+            return True
+        elif self.deadEnd():
+            return False
+        else:
+            savedDomains = self.backupDomains(self.getListOfDomains())
+            smallest = self.indexOfSmallestDomain(savedDomains)
+            resultingDomainsList = []
+            for x in savedDomains[smallest]:
+                self.addRelatedToQueue(self.coordinates[smallest])
+                self.coordinates[smallest].setDomain([x,])
+                self.arcConsistencyHelper()
+                resultingDomainsList.append((x, self.getListOfDomains()))
+                self.restoreDomains(self.backupDomains(savedDomains))
+            for assignment, resultingDomains in resultingDomainsList:
+                for domain in resultingDomains:
+                    if (len(domain) == 0):
+                        resultingDomainsList.remove((assignment, resultingDomains)) #This assignment cannot work
+                        break
+            #compute resulting total domain sizes
+            mappedTotalDomainSizes = list(map(self.totalSizeOfDomains, 
+                                                [domains for assignment, domains in resultingDomainsList]))
+            #pick the assigned variables, ordered by resulting domain size
+            for i in range(len(resultingDomainsList)):
+                currentAssignmentIndex = mappedTotalDomainSizes.index(max(mappedTotalDomainSizes))
+                currentAssignment, currentDomains = resultingDomainsList[currentAssignmentIndex]
+                self.restoreDomains(currentDomains)
+                self.coordinates[smallest].setDomain([currentAssignment,])
+                if (self.solveWithBackTrackingLCV()):
+                    return True
+            else:
+                return False
 
-        #Getting to this point means every value in a coordinate's domain has been assigned
-        #and nothing allows for satisfaction of constraints down the road.  This means we are left
-        #with no other options; there is no solution.
-        raise NoSolution()
+    def totalSizeOfDomains(self, domains):
+        totalSize = 0
+        for domain in domains:
+            totalSize += len(domain)
+        return totalSize
 
-    def addRelatedToQueue(coordinate):
-        for constraint in coordinate.getConstraints():
-            for coord in constraint.getCoordinates():
-                if (coord, constraint) not in consistencyQueue:
-                    consistencyQueue.append((coord, constraint))
+    def getListOfDomains(self):
+        domains = []
+        for coord in self.coordinates:
+            domains.append(coord.getDomain())
+        return domains
 
-  
-    #Attempt the helper method, and if a Solution is found, it'll be caught.        
-    try:
-        arcConsistencyHelper(board)
-    except Solution:
+    def backupDomains(self, domains):
+        domainCopies = []
+        for d in domains:
+            domainCopies.append(coordinate.deepcopy(d))
+        return domainCopies
+
+    def restoreDomains(self, domains):
+        for i in range(len(domains)):
+            self.coordinates[i].setDomain(domains[i])
+
+    def indexOfSmallestDomain(self, domains):
+        smallest = None
+        for i in range(len(domains)):
+            if (smallest == None or ((len(domains[i]) > 1) and (len(domains[i]) > len(domains[smallest])))):
+                smallest = i
+        return smallest
+
+    def isSolved(self):
+        for domain in self.getListOfDomains():
+            if (len(domain) != 1):
+                return False
         return True
-    #In the event that no solution exists
-    except NoSolution:
+
+    def deadEnd(self):
+        for domain in self.getListOfDomains():
+            if (len(domain) == 0):
+                return True
         return False
+
+    def addRelatedToQueue(self, coord):
+        for const in coord.getConstraints():
+            for relatedCoord in const.getCoordinates():
+                if (relatedCoord, const) not in self.consistencyQueue:
+                    self.consistencyQueue.append((relatedCoord, const))
+
 
 #Extensions of generic exceptions, used to take advantage
 #of exception throwing to navigate around the code efficiently

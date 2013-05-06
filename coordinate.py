@@ -17,6 +17,7 @@ class Coordinate:
         self.domain = deepcopy(domain)
         self.originalDomain = deepcopy(domain)
         self.constraints = []
+        self.value = None
 
     def getX(self):
         return self.x
@@ -56,6 +57,15 @@ class Coordinate:
     """
     def resetDomain(self):
         self.domain = deepcopy(self.originalDomain)
+
+    def setValue(self, value):
+        self.value = value
+
+    def releaseValue(self):
+        self.value = None
+
+    def getValue(self):
+        return self.value
     
     """
     Returns a list of constraints in which this coordinate is involved in

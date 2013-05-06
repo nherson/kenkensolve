@@ -15,8 +15,8 @@ import sys
 import coordinate
 import constraint
 import os
-from arcConsistency import arcConsistencyBacktracking
-
+from arcConsistency import arcConsistency
+from backtrack import BackTrack
 
 def parseConstraint(line):
     """
@@ -159,6 +159,7 @@ class Board:
             for j in range(size):
                 self.coordinates.append(coordinate.Coordinate(i, j, startDomain))
         self.constraints = []
+        self.fullDomain = [x+1 for x in range(self.size)]
 
     def getColumn(self, colNum):
         #Return a list of coordinates making up a column
@@ -213,7 +214,7 @@ def generateArithmeticConstraint(board, simpleConstraint):
     
 
 
-def main(kenkenFileName):
+def main(kenkenFileName, method):
     """
     Make sure supplied info is correct for solving a KenKen file
     """
@@ -263,7 +264,21 @@ def main(kenkenFileName):
     # method to use to solve the board.
     #######
 
-    solved = arcConsistencyBacktracking(kenkenBoard)
+    solver = arcConsistency(kenkenBoard)
+
+    if (method == None or method == "arcCon"):
+        solver = arcConsistency(kenkenBoard)
+        solveIt = solver.solveWithBackTracking
+    elif (method == "arcConLCV"):
+        solver = arcConsistency(kenkenBoard)
+        solveIt = solver.solveWithBackTrackingLCV
+    elif (method == "backtrack"):
+        solver = BackTrack(kenkenBoard)
+        solveIt = solver.solve
+    else:
+        raise NameError("undefined solving method" + str(method))
+
+    solved = solveIt()
     if (solved == True):
         print("Solution Found:")
         for i in range(kenkenBoard.getSize()):
@@ -280,7 +295,10 @@ def main(kenkenFileName):
 
 #Get the ball rolling with the main() function
 if __name__ == "__main__":
-    main(sys.argv[1])
+    if (len(sys.argv) == 2):
+        main(sys.argv[1], None)
+    if (len(sys.argv) == 4 and sys.argv[2] == "-m"):
+        main(sys.argv[1], sys.argv[3])
 
 
 

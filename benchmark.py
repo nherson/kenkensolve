@@ -9,6 +9,7 @@ import sys
 stdout = sys.stdout
 devnull = open(os.devnull, 'w')
 puzzleDir = "puzzles/"
+implementedSolvingMethods = ["standardArc", "LCV"] 
 
 def beginFullBenchmark():
     """
@@ -17,21 +18,25 @@ def beginFullBenchmark():
     """
     
     #FOLLOW THIS FORMAT FOR ADDING TESTS TO THIS BENCHMARKING FILE
-    currentPuzzle = "nyt6x6_05-01.kk"
-    printing(False)
-    startTime = time()
-    kenken.main(puzzleDir + currentPuzzle)
-    stopTime = time()
-    printing(True)
-    print(currentPuzzle + " solved in " + str(stopTime - startTime) + " seconds")
+    for method in implementedSolvingMethods:
+        currentPuzzle = "nyt6x6_05-01.kk"
+        printing(False)
+        startTime = time()
+        kenken.main(puzzleDir + currentPuzzle, method)
+        stopTime = time()
+        printing(True)
+        print(currentPuzzle + " solved in " + str(stopTime - startTime) + " seconds")
+
+    
 
 def beginSingleBenchmark(filename):
-    printing(False)
-    startTime = time()
-    kenken.main(puzzleDir + filename)
-    stopTime = time()
-    printing(True)
-    print(filename + " solved in " + str(stopTime - startTime) + " seconds")
+    for method in implementedSolvingMethods:
+        printing(False)
+        startTime = time()
+        kenken.main(puzzleDir + filename, method)
+        stopTime = time()
+        printing(True)
+        print(filename + " solved in " + str(stopTime - startTime) + " seconds")
 
  
     
